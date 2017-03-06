@@ -3,6 +3,7 @@ const zlib = require('zlib');
 const http = require('http');
 const https = require('https');
 const stream = require('stream');
+const crypto = require('crypto');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
 
@@ -114,6 +115,54 @@ class HttpRequest extends stream.Readable {
   }
 
   /**
+   * Sets a `multipart/form-data` field
+   * @param {String} name The field name
+   * @param {Cuffer|String} content The field content
+   * @returns {HttpRequest}
+   */
+  field(name, content) {
+    if (!this._multipart) {
+      this._multipart = true;
+      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
+      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
+      this.body = '';
+    }
+
+    this.body += `
+--${this._boundary}
+Content-Disposition: form-data; name="${name}"
+
+${content}`;
+
+    return this;
+  }
+
+  /**
+   * Attaches a file using `multipart/form-data`
+   * @param {String} name The field name
+   * @param {Buffer|String} content The file content
+   * @param {String} filename The file name
+   * @param {?String} contentType The content type
+   * @returns {HttpRequest}
+   */
+  attach(name, content, filename, contentType) {
+    if (!this._multipart) {
+      this._multipart = true;
+      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
+      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
+      this.body = '';
+    }
+
+    this.body += `
+--${this._boundary}
+Content-Disposition: form-data; name="${name}"; filename="${filename}"
+${contentType ? `Content-Type: ${contentType}\n` : ''}
+${content}`;
+
+    return this;
+  }
+
+  /**
    * Sends content. If `Content-Type` is not set before this and `content` is an Object,
    * it will automatically be set to `application/json`, however, if it is set to
    * `application/x-www-form-urlencoded`, the data will be url encoded.
@@ -139,6 +188,8 @@ class HttpRequest extends stream.Readable {
 
   request(u, redirects, isStream) {
     return new Promise((resolve) => {
+      if (this._multipart) this.body = this.body.concat(`\n--${this._boundary}--`).trim();
+
       let module;
       if (u.protocol === 'http:') {
         module = http;
