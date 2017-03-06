@@ -1,19 +1,31 @@
 const url = require('url');
+const zlib = require('zlib');
 const http = require('http');
 const https = require('https');
+const stream = require('stream');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
 
 /**
  * A HTTP request, returned by all request methods.
+ * @extends {stream.Readable}
  */
-class HttpRequest {
+class HttpRequest extends stream.Readable {
+  /**
+   * Emitted when a response is received when working with streams.
+   * @event HttpRequest#response
+   * @param {HttpResponse} res The response, minus all body related properties
+   */
+
+
   /**
    * Make a new HttpRequest
    * @param {String} method The HTTP method
    * @param {String|Object} url The URL, can be a String or a [URL Object]{@link https://nodejs.org/dist/latest-v7.x/docs/api/url.html#url_url_strings_and_url_objects}
    */
   constructor(method, u) {
+    super();
+
     /**
      * The HTTP method
      * @type {String}
@@ -52,6 +64,24 @@ class HttpRequest {
     } else this.url = u;
 
     this.url.query = {};
+  }
+
+  _read() {
+    if (!this._endCalled) {
+      this._endCalled = true;
+      this.request(this.url, 0, true)
+        .then((res) => {
+          let str;
+          if (res.headers['content-encoding'] === 'gzip') {
+            str = res.pipe(zlib.createGunzip());
+          } else if (res.headers['content-encoding'] === 'deflate') {
+            str = res.pipe(zlib.createInflate());
+          } else str = res;
+
+          str.on('data', chunk => this.push(chunk));
+          str.on('end', () => this.emit('end'));
+        });
+    }
   }
 
   /**
@@ -107,7 +137,7 @@ class HttpRequest {
     return this;
   }
 
-  request(u, redirects) {
+  request(u, redirects, isStream) {
     return new Promise((resolve) => {
       let module;
       if (u.protocol === 'http:') {
@@ -123,8 +153,10 @@ class HttpRequest {
         if ([301, 302, 307, 308].includes(res.statusCode)
         && res.headers.location && redirects < 5) {
           this.request(url.parse(res.headers.location), redirects += 1).then(resolve);
-        } else {
-          (new HttpResponse(this, res)).getData(this, res).then(resolve);
+        } else if (!isStream) (new HttpResponse(this, res)).getData(this, res).then(resolve);
+        else {
+          this.emit('response', new HttpResponse(this, res));
+          resolve(res);
         }
       });
 
@@ -143,6 +175,7 @@ class HttpRequest {
    * @param {callback} callback The callback
    */
   end(callback) {
+    this._endCalled = true;
     this.request(this.url, 0).then((res) => {
       if (res.statusCode < 400) {
         callback(null, res);

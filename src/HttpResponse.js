@@ -32,8 +32,8 @@ class HttpResponse {
     this.headers = res.headers;
 
     /**
-     * Response data in a Buffer, always present
-     * @type {Buffer}
+     * Response data in a Buffer, always present except for in {@link HttpRequest#event:response}
+     * @type {?Buffer}
      */
     this.buffer = Buffer.alloc(0);
 
