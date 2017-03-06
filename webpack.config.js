@@ -1,3 +1,5 @@
+const webpack = require('webpack');
+
 module.exports = {
   entry: './lib/index.js',
   output: {
@@ -5,4 +7,7 @@ module.exports = {
     libraryTarget: 'var',
     library: 'tinyhttp',
   },
+  plugins: [
+    new webpack.optimize.UglifyJsPlugin({ minimize: true })
+  ]
 };
