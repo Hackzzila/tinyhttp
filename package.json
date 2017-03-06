@@ -4,7 +4,7 @@
   "description": "A small HTTP module with no dependencies ������",
   "main": "index.js",
   "scripts": {
-    "docs": "node_modules/.bin/jsdoc -c jsdoc.json",
+    "docs": "node_modules/.bin/jsdoc --readme README.md -c jsdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
