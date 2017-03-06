@@ -162,6 +162,7 @@ class HttpRequest {
    * Standard promise stuff
    * @param {promiseCallback} resolve Called if the request succeeded
    * @param {promiseCallback} reject Called if the request failed
+   * @returns {HttpRequest}
    */
   then(resolve, reject) {
     if (!this._promise) {
@@ -175,14 +176,17 @@ class HttpRequest {
       });
     }
     this._promise.then(resolve, reject);
+    return this;
   }
 
   /**
    * Standard promise stuff
    * @param {promiseCallback} cb Called if the request failed
+   * @returns {HttpRequest}
    */
   catch(cb) {
     this.then(null, cb);
+    return this;
   }
 }
 
