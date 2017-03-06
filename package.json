@@ -4,6 +4,7 @@
   "description": "A small HTTP module with no dependencies ������",
   "main": "index.js",
   "scripts": {
+    "docs": "node_modules/.bin/jsdoc -c jsdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/hackzzila/tinyhttp#readme",
   "devDependencies": {
+    "docdash": "^0.4.0",
     "eslint": "^3.17.0",
     "eslint-config-airbnb-base": "^11.1.1",
     "eslint-plugin-import": "^2.2.0",
