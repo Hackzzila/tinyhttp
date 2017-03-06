@@ -1,5 +1,5 @@
-const HttpRequest = require('./src/HttpRequest');
-const HttpResponse = require('./src/HttpResponse');
+const HttpRequest = require('./HttpRequest');
+const HttpResponse = require('./HttpResponse');
 
 module.exports = {};
 
