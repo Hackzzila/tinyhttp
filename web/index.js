@@ -82,9 +82,9 @@ var tinyhttp =
 
 
 
-var base64 = __webpack_require__(30)
+var base64 = __webpack_require__(31)
 var ieee754 = __webpack_require__(35)
-var isArray = __webpack_require__(17)
+var isArray = __webpack_require__(18)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -2131,7 +2131,7 @@ var objectKeys = Object.keys || function (obj) {
 module.exports = Duplex;
 
 /*<replacement>*/
-var processNextTick = __webpack_require__(9);
+var processNextTick = __webpack_require__(10);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -2139,8 +2139,8 @@ var util = __webpack_require__(5);
 util.inherits = __webpack_require__(3);
 /*</replacement>*/
 
-var Readable = __webpack_require__(22);
-var Writable = __webpack_require__(12);
+var Readable = __webpack_require__(23);
+var Writable = __webpack_require__(13);
 
 util.inherits(Duplex, Readable);
 
@@ -2722,6 +2722,139 @@ exports.setTyped(TYPED_OK);
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+module.exports = Stream;
+
+var EE = __webpack_require__(6).EventEmitter;
+var inherits = __webpack_require__(3);
+
+inherits(Stream, EE);
+Stream.Readable = __webpack_require__(14);
+Stream.Writable = __webpack_require__(49);
+Stream.Duplex = __webpack_require__(46);
+Stream.Transform = __webpack_require__(24);
+Stream.PassThrough = __webpack_require__(48);
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream;
+
+
+
+// old-style streams.  Note that the pipe method (the only relevant
+// part of this class) is overridden in the Readable class.
+
+function Stream() {
+  EE.call(this);
+}
+
+Stream.prototype.pipe = function(dest, options) {
+  var source = this;
+
+  function ondata(chunk) {
+    if (dest.writable) {
+      if (false === dest.write(chunk) && source.pause) {
+        source.pause();
+      }
+    }
+  }
+
+  source.on('data', ondata);
+
+  function ondrain() {
+    if (source.readable && source.resume) {
+      source.resume();
+    }
+  }
+
+  dest.on('drain', ondrain);
+
+  // If the 'end' option is not supplied, dest.end() will be called when
+  // source gets the 'end' or 'close' events.  Only dest.end() once.
+  if (!dest._isStdio && (!options || options.end !== false)) {
+    source.on('end', onend);
+    source.on('close', onclose);
+  }
+
+  var didOnEnd = false;
+  function onend() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    dest.end();
+  }
+
+
+  function onclose() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    if (typeof dest.destroy === 'function') dest.destroy();
+  }
+
+  // don't leave dangling pipes when there are errors.
+  function onerror(er) {
+    cleanup();
+    if (EE.listenerCount(this, 'error') === 0) {
+      throw er; // Unhandled stream error in pipe.
+    }
+  }
+
+  source.on('error', onerror);
+  dest.on('error', onerror);
+
+  // remove all the event listeners that were added.
+  function cleanup() {
+    source.removeListener('data', ondata);
+    dest.removeListener('drain', ondrain);
+
+    source.removeListener('end', onend);
+    source.removeListener('close', onclose);
+
+    source.removeListener('error', onerror);
+    dest.removeListener('error', onerror);
+
+    source.removeListener('end', cleanup);
+    source.removeListener('close', cleanup);
+
+    dest.removeListener('close', cleanup);
+  }
+
+  source.on('end', cleanup);
+  source.on('close', cleanup);
+
+  dest.on('close', cleanup);
+
+  dest.emit('pipe', source);
+
+  // Allow for unix-like usage: A.pipe(B).pipe(C)
+  return dest;
+};
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
@@ -2835,7 +2968,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2886,7 +3019,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2897,7 +3030,7 @@ exports.encode = exports.stringify = __webpack_require__(45);
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3085,7 +3218,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3098,7 +3231,7 @@ function done(stream, er, data) {
 module.exports = Writable;
 
 /*<replacement>*/
-var processNextTick = __webpack_require__(9);
+var processNextTick = __webpack_require__(10);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -3126,7 +3259,7 @@ var internalUtil = {
 var Stream;
 (function () {
   try {
-    Stream = __webpack_require__(14);
+    Stream = __webpack_require__(8);
   } catch (_) {} finally {
     if (!Stream) Stream = __webpack_require__(6).EventEmitter;
   }
@@ -3135,7 +3268,7 @@ var Stream;
 
 var Buffer = __webpack_require__(0).Buffer;
 /*<replacement>*/
-var bufferShim = __webpack_require__(8);
+var bufferShim = __webpack_require__(9);
 /*</replacement>*/
 
 util.inherits(Writable, Stream);
@@ -3646,160 +3779,27 @@ function CorkedRequest(state) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(53).setImmediate))
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {var Stream = (function (){
   try {
-    return __webpack_require__(14); // hack to fix a circular dependency issue when used with browserify
+    return __webpack_require__(8); // hack to fix a circular dependency issue when used with browserify
   } catch(_){}
 }());
-exports = module.exports = __webpack_require__(22);
+exports = module.exports = __webpack_require__(23);
 exports.Stream = Stream || exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(12);
+exports.Writable = __webpack_require__(13);
 exports.Duplex = __webpack_require__(4);
-exports.Transform = __webpack_require__(11);
-exports.PassThrough = __webpack_require__(21);
+exports.Transform = __webpack_require__(12);
+exports.PassThrough = __webpack_require__(22);
 
 if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
   module.exports = Stream;
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-module.exports = Stream;
-
-var EE = __webpack_require__(6).EventEmitter;
-var inherits = __webpack_require__(3);
-
-inherits(Stream, EE);
-Stream.Readable = __webpack_require__(13);
-Stream.Writable = __webpack_require__(49);
-Stream.Duplex = __webpack_require__(46);
-Stream.Transform = __webpack_require__(23);
-Stream.PassThrough = __webpack_require__(48);
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream;
-
-
-
-// old-style streams.  Note that the pipe method (the only relevant
-// part of this class) is overridden in the Readable class.
-
-function Stream() {
-  EE.call(this);
-}
-
-Stream.prototype.pipe = function(dest, options) {
-  var source = this;
-
-  function ondata(chunk) {
-    if (dest.writable) {
-      if (false === dest.write(chunk) && source.pause) {
-        source.pause();
-      }
-    }
-  }
-
-  source.on('data', ondata);
-
-  function ondrain() {
-    if (source.readable && source.resume) {
-      source.resume();
-    }
-  }
-
-  dest.on('drain', ondrain);
-
-  // If the 'end' option is not supplied, dest.end() will be called when
-  // source gets the 'end' or 'close' events.  Only dest.end() once.
-  if (!dest._isStdio && (!options || options.end !== false)) {
-    source.on('end', onend);
-    source.on('close', onclose);
-  }
-
-  var didOnEnd = false;
-  function onend() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    dest.end();
-  }
-
-
-  function onclose() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    if (typeof dest.destroy === 'function') dest.destroy();
-  }
-
-  // don't leave dangling pipes when there are errors.
-  function onerror(er) {
-    cleanup();
-    if (EE.listenerCount(this, 'error') === 0) {
-      throw er; // Unhandled stream error in pipe.
-    }
-  }
-
-  source.on('error', onerror);
-  dest.on('error', onerror);
-
-  // remove all the event listeners that were added.
-  function cleanup() {
-    source.removeListener('data', ondata);
-    dest.removeListener('drain', ondrain);
-
-    source.removeListener('end', onend);
-    source.removeListener('close', onclose);
-
-    source.removeListener('error', onerror);
-    dest.removeListener('error', onerror);
-
-    source.removeListener('end', cleanup);
-    source.removeListener('close', cleanup);
-
-    dest.removeListener('close', cleanup);
-  }
-
-  source.on('end', cleanup);
-  source.on('close', cleanup);
-
-  dest.on('close', cleanup);
-
-  dest.emit('pipe', source);
-
-  // Allow for unix-like usage: A.pipe(B).pipe(C)
-  return dest;
-};
-
 
 /***/ }),
 /* 15 */
@@ -3905,7 +3905,7 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
       'gopher:': true,
       'file:': true
     },
-    querystring = __webpack_require__(10);
+    querystring = __webpack_require__(11);
 
 function urlParse(url, parseQueryString, slashesDenoteHost) {
   if (url && util.isObject(url) && url instanceof Url) return url;
@@ -4552,8 +4552,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var url = __webpack_require__(15);
-var zlib = __webpack_require__(32);
-var querystring = __webpack_require__(10);
+var zlib = __webpack_require__(17);
+var querystring = __webpack_require__(11);
 
 /**
  * A response
@@ -4588,8 +4588,8 @@ var HttpResponse = function () {
     this.headers = res.headers;
 
     /**
-     * Response data in a Buffer, always present
-     * @type {Buffer}
+     * Response data in a Buffer, always present except for in {@link HttpRequest#event:response}
+     * @type {?Buffer}
      */
     this.buffer = Buffer.alloc(0);
 
@@ -4647,6 +4647,623 @@ module.exports = HttpResponse;
 
 /***/ }),
 /* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(Buffer, process) {// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var Transform = __webpack_require__(24);
+
+var binding = __webpack_require__(32);
+var util = __webpack_require__(28);
+var assert = __webpack_require__(30).ok;
+
+// zlib doesn't provide these, so kludge them in following the same
+// const naming scheme zlib uses.
+binding.Z_MIN_WINDOWBITS = 8;
+binding.Z_MAX_WINDOWBITS = 15;
+binding.Z_DEFAULT_WINDOWBITS = 15;
+
+// fewer than 64 bytes per chunk is stupid.
+// technically it could work with as few as 8, but even 64 bytes
+// is absurdly low.  Usually a MB or more is best.
+binding.Z_MIN_CHUNK = 64;
+binding.Z_MAX_CHUNK = Infinity;
+binding.Z_DEFAULT_CHUNK = (16 * 1024);
+
+binding.Z_MIN_MEMLEVEL = 1;
+binding.Z_MAX_MEMLEVEL = 9;
+binding.Z_DEFAULT_MEMLEVEL = 8;
+
+binding.Z_MIN_LEVEL = -1;
+binding.Z_MAX_LEVEL = 9;
+binding.Z_DEFAULT_LEVEL = binding.Z_DEFAULT_COMPRESSION;
+
+// expose all the zlib constants
+Object.keys(binding).forEach(function(k) {
+  if (k.match(/^Z/)) exports[k] = binding[k];
+});
+
+// translation table for return codes.
+exports.codes = {
+  Z_OK: binding.Z_OK,
+  Z_STREAM_END: binding.Z_STREAM_END,
+  Z_NEED_DICT: binding.Z_NEED_DICT,
+  Z_ERRNO: binding.Z_ERRNO,
+  Z_STREAM_ERROR: binding.Z_STREAM_ERROR,
+  Z_DATA_ERROR: binding.Z_DATA_ERROR,
+  Z_MEM_ERROR: binding.Z_MEM_ERROR,
+  Z_BUF_ERROR: binding.Z_BUF_ERROR,
+  Z_VERSION_ERROR: binding.Z_VERSION_ERROR
+};
+
+Object.keys(exports.codes).forEach(function(k) {
+  exports.codes[exports.codes[k]] = k;
+});
+
+exports.Deflate = Deflate;
+exports.Inflate = Inflate;
+exports.Gzip = Gzip;
+exports.Gunzip = Gunzip;
+exports.DeflateRaw = DeflateRaw;
+exports.InflateRaw = InflateRaw;
+exports.Unzip = Unzip;
+
+exports.createDeflate = function(o) {
+  return new Deflate(o);
+};
+
+exports.createInflate = function(o) {
+  return new Inflate(o);
+};
+
+exports.createDeflateRaw = function(o) {
+  return new DeflateRaw(o);
+};
+
+exports.createInflateRaw = function(o) {
+  return new InflateRaw(o);
+};
+
+exports.createGzip = function(o) {
+  return new Gzip(o);
+};
+
+exports.createGunzip = function(o) {
+  return new Gunzip(o);
+};
+
+exports.createUnzip = function(o) {
+  return new Unzip(o);
+};
+
+
+// Convenience methods.
+// compress/decompress a string or buffer in one step.
+exports.deflate = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new Deflate(opts), buffer, callback);
+};
+
+exports.deflateSync = function(buffer, opts) {
+  return zlibBufferSync(new Deflate(opts), buffer);
+};
+
+exports.gzip = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new Gzip(opts), buffer, callback);
+};
+
+exports.gzipSync = function(buffer, opts) {
+  return zlibBufferSync(new Gzip(opts), buffer);
+};
+
+exports.deflateRaw = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new DeflateRaw(opts), buffer, callback);
+};
+
+exports.deflateRawSync = function(buffer, opts) {
+  return zlibBufferSync(new DeflateRaw(opts), buffer);
+};
+
+exports.unzip = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new Unzip(opts), buffer, callback);
+};
+
+exports.unzipSync = function(buffer, opts) {
+  return zlibBufferSync(new Unzip(opts), buffer);
+};
+
+exports.inflate = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new Inflate(opts), buffer, callback);
+};
+
+exports.inflateSync = function(buffer, opts) {
+  return zlibBufferSync(new Inflate(opts), buffer);
+};
+
+exports.gunzip = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new Gunzip(opts), buffer, callback);
+};
+
+exports.gunzipSync = function(buffer, opts) {
+  return zlibBufferSync(new Gunzip(opts), buffer);
+};
+
+exports.inflateRaw = function(buffer, opts, callback) {
+  if (typeof opts === 'function') {
+    callback = opts;
+    opts = {};
+  }
+  return zlibBuffer(new InflateRaw(opts), buffer, callback);
+};
+
+exports.inflateRawSync = function(buffer, opts) {
+  return zlibBufferSync(new InflateRaw(opts), buffer);
+};
+
+function zlibBuffer(engine, buffer, callback) {
+  var buffers = [];
+  var nread = 0;
+
+  engine.on('error', onError);
+  engine.on('end', onEnd);
+
+  engine.end(buffer);
+  flow();
+
+  function flow() {
+    var chunk;
+    while (null !== (chunk = engine.read())) {
+      buffers.push(chunk);
+      nread += chunk.length;
+    }
+    engine.once('readable', flow);
+  }
+
+  function onError(err) {
+    engine.removeListener('end', onEnd);
+    engine.removeListener('readable', flow);
+    callback(err);
+  }
+
+  function onEnd() {
+    var buf = Buffer.concat(buffers, nread);
+    buffers = [];
+    callback(null, buf);
+    engine.close();
+  }
+}
+
+function zlibBufferSync(engine, buffer) {
+  if (typeof buffer === 'string')
+    buffer = new Buffer(buffer);
+  if (!Buffer.isBuffer(buffer))
+    throw new TypeError('Not a string or buffer');
+
+  var flushFlag = binding.Z_FINISH;
+
+  return engine._processChunk(buffer, flushFlag);
+}
+
+// generic zlib
+// minimal 2-byte header
+function Deflate(opts) {
+  if (!(this instanceof Deflate)) return new Deflate(opts);
+  Zlib.call(this, opts, binding.DEFLATE);
+}
+
+function Inflate(opts) {
+  if (!(this instanceof Inflate)) return new Inflate(opts);
+  Zlib.call(this, opts, binding.INFLATE);
+}
+
+
+
+// gzip - bigger header, same deflate compression
+function Gzip(opts) {
+  if (!(this instanceof Gzip)) return new Gzip(opts);
+  Zlib.call(this, opts, binding.GZIP);
+}
+
+function Gunzip(opts) {
+  if (!(this instanceof Gunzip)) return new Gunzip(opts);
+  Zlib.call(this, opts, binding.GUNZIP);
+}
+
+
+
+// raw - no header
+function DeflateRaw(opts) {
+  if (!(this instanceof DeflateRaw)) return new DeflateRaw(opts);
+  Zlib.call(this, opts, binding.DEFLATERAW);
+}
+
+function InflateRaw(opts) {
+  if (!(this instanceof InflateRaw)) return new InflateRaw(opts);
+  Zlib.call(this, opts, binding.INFLATERAW);
+}
+
+
+// auto-detect header.
+function Unzip(opts) {
+  if (!(this instanceof Unzip)) return new Unzip(opts);
+  Zlib.call(this, opts, binding.UNZIP);
+}
+
+
+// the Zlib class they all inherit from
+// This thing manages the queue of requests, and returns
+// true or false if there is anything in the queue when
+// you call the .write() method.
+
+function Zlib(opts, mode) {
+  this._opts = opts = opts || {};
+  this._chunkSize = opts.chunkSize || exports.Z_DEFAULT_CHUNK;
+
+  Transform.call(this, opts);
+
+  if (opts.flush) {
+    if (opts.flush !== binding.Z_NO_FLUSH &&
+        opts.flush !== binding.Z_PARTIAL_FLUSH &&
+        opts.flush !== binding.Z_SYNC_FLUSH &&
+        opts.flush !== binding.Z_FULL_FLUSH &&
+        opts.flush !== binding.Z_FINISH &&
+        opts.flush !== binding.Z_BLOCK) {
+      throw new Error('Invalid flush flag: ' + opts.flush);
+    }
+  }
+  this._flushFlag = opts.flush || binding.Z_NO_FLUSH;
+
+  if (opts.chunkSize) {
+    if (opts.chunkSize < exports.Z_MIN_CHUNK ||
+        opts.chunkSize > exports.Z_MAX_CHUNK) {
+      throw new Error('Invalid chunk size: ' + opts.chunkSize);
+    }
+  }
+
+  if (opts.windowBits) {
+    if (opts.windowBits < exports.Z_MIN_WINDOWBITS ||
+        opts.windowBits > exports.Z_MAX_WINDOWBITS) {
+      throw new Error('Invalid windowBits: ' + opts.windowBits);
+    }
+  }
+
+  if (opts.level) {
+    if (opts.level < exports.Z_MIN_LEVEL ||
+        opts.level > exports.Z_MAX_LEVEL) {
+      throw new Error('Invalid compression level: ' + opts.level);
+    }
+  }
+
+  if (opts.memLevel) {
+    if (opts.memLevel < exports.Z_MIN_MEMLEVEL ||
+        opts.memLevel > exports.Z_MAX_MEMLEVEL) {
+      throw new Error('Invalid memLevel: ' + opts.memLevel);
+    }
+  }
+
+  if (opts.strategy) {
+    if (opts.strategy != exports.Z_FILTERED &&
+        opts.strategy != exports.Z_HUFFMAN_ONLY &&
+        opts.strategy != exports.Z_RLE &&
+        opts.strategy != exports.Z_FIXED &&
+        opts.strategy != exports.Z_DEFAULT_STRATEGY) {
+      throw new Error('Invalid strategy: ' + opts.strategy);
+    }
+  }
+
+  if (opts.dictionary) {
+    if (!Buffer.isBuffer(opts.dictionary)) {
+      throw new Error('Invalid dictionary: it should be a Buffer instance');
+    }
+  }
+
+  this._binding = new binding.Zlib(mode);
+
+  var self = this;
+  this._hadError = false;
+  this._binding.onerror = function(message, errno) {
+    // there is no way to cleanly recover.
+    // continuing only obscures problems.
+    self._binding = null;
+    self._hadError = true;
+
+    var error = new Error(message);
+    error.errno = errno;
+    error.code = exports.codes[errno];
+    self.emit('error', error);
+  };
+
+  var level = exports.Z_DEFAULT_COMPRESSION;
+  if (typeof opts.level === 'number') level = opts.level;
+
+  var strategy = exports.Z_DEFAULT_STRATEGY;
+  if (typeof opts.strategy === 'number') strategy = opts.strategy;
+
+  this._binding.init(opts.windowBits || exports.Z_DEFAULT_WINDOWBITS,
+                     level,
+                     opts.memLevel || exports.Z_DEFAULT_MEMLEVEL,
+                     strategy,
+                     opts.dictionary);
+
+  this._buffer = new Buffer(this._chunkSize);
+  this._offset = 0;
+  this._closed = false;
+  this._level = level;
+  this._strategy = strategy;
+
+  this.once('end', this.close);
+}
+
+util.inherits(Zlib, Transform);
+
+Zlib.prototype.params = function(level, strategy, callback) {
+  if (level < exports.Z_MIN_LEVEL ||
+      level > exports.Z_MAX_LEVEL) {
+    throw new RangeError('Invalid compression level: ' + level);
+  }
+  if (strategy != exports.Z_FILTERED &&
+      strategy != exports.Z_HUFFMAN_ONLY &&
+      strategy != exports.Z_RLE &&
+      strategy != exports.Z_FIXED &&
+      strategy != exports.Z_DEFAULT_STRATEGY) {
+    throw new TypeError('Invalid strategy: ' + strategy);
+  }
+
+  if (this._level !== level || this._strategy !== strategy) {
+    var self = this;
+    this.flush(binding.Z_SYNC_FLUSH, function() {
+      self._binding.params(level, strategy);
+      if (!self._hadError) {
+        self._level = level;
+        self._strategy = strategy;
+        if (callback) callback();
+      }
+    });
+  } else {
+    process.nextTick(callback);
+  }
+};
+
+Zlib.prototype.reset = function() {
+  return this._binding.reset();
+};
+
+// This is the _flush function called by the transform class,
+// internally, when the last chunk has been written.
+Zlib.prototype._flush = function(callback) {
+  this._transform(new Buffer(0), '', callback);
+};
+
+Zlib.prototype.flush = function(kind, callback) {
+  var ws = this._writableState;
+
+  if (typeof kind === 'function' || (kind === void 0 && !callback)) {
+    callback = kind;
+    kind = binding.Z_FULL_FLUSH;
+  }
+
+  if (ws.ended) {
+    if (callback)
+      process.nextTick(callback);
+  } else if (ws.ending) {
+    if (callback)
+      this.once('end', callback);
+  } else if (ws.needDrain) {
+    var self = this;
+    this.once('drain', function() {
+      self.flush(callback);
+    });
+  } else {
+    this._flushFlag = kind;
+    this.write(new Buffer(0), '', callback);
+  }
+};
+
+Zlib.prototype.close = function(callback) {
+  if (callback)
+    process.nextTick(callback);
+
+  if (this._closed)
+    return;
+
+  this._closed = true;
+
+  this._binding.close();
+
+  var self = this;
+  process.nextTick(function() {
+    self.emit('close');
+  });
+};
+
+Zlib.prototype._transform = function(chunk, encoding, cb) {
+  var flushFlag;
+  var ws = this._writableState;
+  var ending = ws.ending || ws.ended;
+  var last = ending && (!chunk || ws.length === chunk.length);
+
+  if (!chunk === null && !Buffer.isBuffer(chunk))
+    return cb(new Error('invalid input'));
+
+  // If it's the last chunk, or a final flush, we use the Z_FINISH flush flag.
+  // If it's explicitly flushing at some other time, then we use
+  // Z_FULL_FLUSH. Otherwise, use Z_NO_FLUSH for maximum compression
+  // goodness.
+  if (last)
+    flushFlag = binding.Z_FINISH;
+  else {
+    flushFlag = this._flushFlag;
+    // once we've flushed the last of the queue, stop flushing and
+    // go back to the normal behavior.
+    if (chunk.length >= ws.length) {
+      this._flushFlag = this._opts.flush || binding.Z_NO_FLUSH;
+    }
+  }
+
+  var self = this;
+  this._processChunk(chunk, flushFlag, cb);
+};
+
+Zlib.prototype._processChunk = function(chunk, flushFlag, cb) {
+  var availInBefore = chunk && chunk.length;
+  var availOutBefore = this._chunkSize - this._offset;
+  var inOff = 0;
+
+  var self = this;
+
+  var async = typeof cb === 'function';
+
+  if (!async) {
+    var buffers = [];
+    var nread = 0;
+
+    var error;
+    this.on('error', function(er) {
+      error = er;
+    });
+
+    do {
+      var res = this._binding.writeSync(flushFlag,
+                                        chunk, // in
+                                        inOff, // in_off
+                                        availInBefore, // in_len
+                                        this._buffer, // out
+                                        this._offset, //out_off
+                                        availOutBefore); // out_len
+    } while (!this._hadError && callback(res[0], res[1]));
+
+    if (this._hadError) {
+      throw error;
+    }
+
+    var buf = Buffer.concat(buffers, nread);
+    this.close();
+
+    return buf;
+  }
+
+  var req = this._binding.write(flushFlag,
+                                chunk, // in
+                                inOff, // in_off
+                                availInBefore, // in_len
+                                this._buffer, // out
+                                this._offset, //out_off
+                                availOutBefore); // out_len
+
+  req.buffer = chunk;
+  req.callback = callback;
+
+  function callback(availInAfter, availOutAfter) {
+    if (self._hadError)
+      return;
+
+    var have = availOutBefore - availOutAfter;
+    assert(have >= 0, 'have should not go down');
+
+    if (have > 0) {
+      var out = self._buffer.slice(self._offset, self._offset + have);
+      self._offset += have;
+      // serve some output to the consumer.
+      if (async) {
+        self.push(out);
+      } else {
+        buffers.push(out);
+        nread += out.length;
+      }
+    }
+
+    // exhausted the output buffer, or used all the input create a new one.
+    if (availOutAfter === 0 || self._offset >= self._chunkSize) {
+      availOutBefore = self._chunkSize;
+      self._offset = 0;
+      self._buffer = new Buffer(self._chunkSize);
+    }
+
+    if (availOutAfter === 0) {
+      // Not actually done.  Need to reprocess.
+      // Also, update the availInBefore to the availInAfter value,
+      // so that if we have to hit it a third (fourth, etc.) time,
+      // it'll have the correct byte counts.
+      inOff += (availInBefore - availInAfter);
+      availInBefore = availInAfter;
+
+      if (!async)
+        return true;
+
+      var newReq = self._binding.write(flushFlag,
+                                       chunk,
+                                       inOff,
+                                       availInBefore,
+                                       self._buffer,
+                                       self._offset,
+                                       self._chunkSize);
+      newReq.callback = callback; // this same function
+      newReq.buffer = chunk;
+      return;
+    }
+
+    if (!async)
+      return false;
+
+    // finished with the chunk.
+    cb();
+  }
+};
+
+util.inherits(Deflate, Zlib);
+util.inherits(Inflate, Zlib);
+util.inherits(Gzip, Zlib);
+util.inherits(Gunzip, Zlib);
+util.inherits(DeflateRaw, Zlib);
+util.inherits(InflateRaw, Zlib);
+util.inherits(Unzip, Zlib);
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer, __webpack_require__(2)))
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -4657,7 +5274,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4696,7 +5313,7 @@ module.exports = adler32;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4744,7 +5361,7 @@ module.exports = crc32;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4764,7 +5381,7 @@ module.exports = {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4776,7 +5393,7 @@ module.exports = {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(11);
+var Transform = __webpack_require__(12);
 
 /*<replacement>*/
 var util = __webpack_require__(5);
@@ -4796,7 +5413,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4805,11 +5422,11 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 module.exports = Readable;
 
 /*<replacement>*/
-var processNextTick = __webpack_require__(9);
+var processNextTick = __webpack_require__(10);
 /*</replacement>*/
 
 /*<replacement>*/
-var isArray = __webpack_require__(17);
+var isArray = __webpack_require__(18);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -4830,7 +5447,7 @@ var EElistenerCount = function (emitter, type) {
 var Stream;
 (function () {
   try {
-    Stream = __webpack_require__(14);
+    Stream = __webpack_require__(8);
   } catch (_) {} finally {
     if (!Stream) Stream = __webpack_require__(6).EventEmitter;
   }
@@ -4839,7 +5456,7 @@ var Stream;
 
 var Buffer = __webpack_require__(0).Buffer;
 /*<replacement>*/
-var bufferShim = __webpack_require__(8);
+var bufferShim = __webpack_require__(9);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -4939,7 +5556,7 @@ function ReadableState(options, stream) {
   this.decoder = null;
   this.encoding = null;
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(26).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(27).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -5049,7 +5666,7 @@ function needMoreData(state) {
 
 // backwards compatibility.
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(26).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(27).StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
   return this;
@@ -5744,14 +6361,14 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(11)
+module.exports = __webpack_require__(12)
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(51)
@@ -5836,7 +6453,7 @@ http.METHODS = [
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
@@ -5912,7 +6529,7 @@ xhr = null // Help gc
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright Joyent, Inc. and other Node contributors.
@@ -6139,7 +6756,7 @@ function base64DetectIncompleteChar(buffer) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -6732,7 +7349,7 @@ function hasOwnProperty(obj, prop) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1), __webpack_require__(2)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6744,17 +7361,32 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var url = __webpack_require__(15);
-var http = __webpack_require__(24);
+var zlib = __webpack_require__(17);
+var http = __webpack_require__(25);
 var https = __webpack_require__(34);
-var querystring = __webpack_require__(10);
+var stream = __webpack_require__(8);
+var querystring = __webpack_require__(11);
 var HttpResponse = __webpack_require__(16);
 
 /**
  * A HTTP request, returned by all request methods.
+ * @extends {stream.Readable}
  */
 
-var HttpRequest = function () {
+var HttpRequest = function (_stream$Readable) {
+  _inherits(HttpRequest, _stream$Readable);
+
+  /**
+   * Emitted when a response is received when working with streams.
+   * @event HttpRequest#response
+   * @param {HttpResponse} res The response, minus all body related properties
+   */
+
   /**
    * Make a new HttpRequest
    * @param {String} method The HTTP method
@@ -6767,25 +7399,27 @@ var HttpRequest = function () {
      * The HTTP method
      * @type {String}
      */
-    this.method = method;
+    var _this = _possibleConstructorReturn(this, (HttpRequest.__proto__ || Object.getPrototypeOf(HttpRequest)).call(this));
+
+    _this.method = method;
 
     /**
      * The headers to be sent, can be manipulated easily with {@link HttpRequest#set}
      * @type {Object}
      */
-    this.headers = { 'User-Agent': 'node-tinyhttp', 'Accept-Encoding': 'gzip, deflate' };
+    _this.headers = { 'User-Agent': 'node-tinyhttp', 'Accept-Encoding': 'gzip, deflate' };
 
     /**
      * The request body, can be manipulated easily with {@link HttpRequest#send}
      * @type {Buffer|String}
      */
-    this.body = null;
+    _this.body = null;
 
     /**
      * The request body encoding, if used, can be manipulated easily with {@link HttpRequest#send}
      * @type {String}
      */
-    this.encoding = null;
+    _this.encoding = null;
 
     if (typeof u === 'string') {
       var parsed = url.parse(u);
@@ -6794,24 +7428,49 @@ var HttpRequest = function () {
          * The URL
          * @type {Object}
          */
-        this.url = parsed;
+        _this.url = parsed;
       } else {
         throw new Error('invalid protocol ' + parsed.protocol + ', expected \'http:\' or \'https:\'');
       }
-    } else this.url = u;
+    } else _this.url = u;
 
-    this.url.query = {};
+    _this.url.query = {};
+    return _this;
   }
 
-  /**
-   * Sets the query string, an be called multiple times
-   * @param {String|Object} queryString The qeury string as an Object or a String
-   * @param {?Function} parse A custom query string parser (e.g. `require('qs').parse`)
-   * @returns {HttpRequest}
-   */
-
-
   _createClass(HttpRequest, [{
+    key: '_read',
+    value: function _read() {
+      var _this2 = this;
+
+      if (!this._endCalled) {
+        this._endCalled = true;
+        this.request(this.url, 0, true).then(function (res) {
+          var str = void 0;
+          if (res.headers['content-encoding'] === 'gzip') {
+            str = res.pipe(zlib.createGunzip());
+          } else if (res.headers['content-encoding'] === 'deflate') {
+            str = res.pipe(zlib.createInflate());
+          } else str = res;
+
+          str.on('data', function (chunk) {
+            return _this2.push(chunk);
+          });
+          str.on('end', function () {
+            return _this2.emit('end');
+          });
+        });
+      }
+    }
+
+    /**
+     * Sets the query string, an be called multiple times
+     * @param {String|Object} queryString The qeury string as an Object or a String
+     * @param {?Function} parse A custom query string parser (e.g. `require('qs').parse`)
+     * @returns {HttpRequest}
+     */
+
+  }, {
     key: 'query',
     value: function query(_query, parse) {
       if (!parse) parse = querystring.parse;
@@ -6867,8 +7526,8 @@ var HttpRequest = function () {
     }
   }, {
     key: 'request',
-    value: function request(u, redirects) {
-      var _this = this;
+    value: function request(u, redirects, isStream) {
+      var _this3 = this;
 
       return new Promise(function (resolve) {
         var module = void 0;
@@ -6879,17 +7538,18 @@ var HttpRequest = function () {
         }
 
         var req = module.request(Object.assign({}, u, {
-          method: _this.method,
-          headers: _this.headers
+          method: _this3.method,
+          headers: _this3.headers
         }), function (res) {
           if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location && redirects < 5) {
-            _this.request(url.parse(res.headers.location), redirects += 1).then(resolve);
-          } else {
-            new HttpResponse(_this, res).getData(_this, res).then(resolve);
+            _this3.request(url.parse(res.headers.location), redirects += 1).then(resolve);
+          } else if (!isStream) new HttpResponse(_this3, res).getData(_this3, res).then(resolve);else {
+            _this3.emit('response', new HttpResponse(_this3, res));
+            resolve(res);
           }
         });
 
-        req.end(_this.body, _this.encoding);
+        req.end(_this3.body, _this3.encoding);
       });
     }
 
@@ -6907,6 +7567,7 @@ var HttpRequest = function () {
   }, {
     key: 'end',
     value: function end(callback) {
+      this._endCalled = true;
       this.request(this.url, 0).then(function (res) {
         if (res.statusCode < 400) {
           callback(null, res);
@@ -6926,49 +7587,47 @@ var HttpRequest = function () {
      * Standard promise stuff
      * @param {promiseCallback} resolve Called if the request succeeded
      * @param {promiseCallback} reject Called if the request failed
-     * @returns {HttpRequest}
+     * @returns {Promise}
      */
 
   }, {
     key: 'then',
     value: function then(resolve, reject) {
-      var _this2 = this;
+      var _this4 = this;
 
       if (!this._promise) {
         if (this._endCalled) {
           console.warn('Warning: request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises');
         }
         this._promise = new Promise(function (innerResolve, innerReject) {
-          _this2.end(function (err, res) {
+          _this4.end(function (err, res) {
             if (err) innerReject(err);else innerResolve(res);
           });
         });
       }
-      this._promise.then(resolve, reject);
-      return this;
+      return this._promise.then(resolve, reject);
     }
 
     /**
      * Standard promise stuff
      * @param {promiseCallback} cb Called if the request failed
-     * @returns {HttpRequest}
+     * @returns {Promise}
      */
 
   }, {
     key: 'catch',
     value: function _catch(cb) {
-      this.then(null, cb);
-      return this;
+      return this.then(null, cb);
     }
   }]);
 
   return HttpRequest;
-}();
+}(stream.Readable);
 
 module.exports = HttpRequest;
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7040,7 +7699,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(27);
+var util = __webpack_require__(28);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -7466,7 +8125,7 @@ var objectKeys = Object.keys || function (obj) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7587,10 +8246,10 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, Buffer) {var msg = __webpack_require__(20);
+/* WEBPACK VAR INJECTION */(function(process, Buffer) {var msg = __webpack_require__(21);
 var zstream = __webpack_require__(42);
 var zlib_deflate = __webpack_require__(37);
 var zlib_inflate = __webpack_require__(39);
@@ -7830,623 +8489,6 @@ exports.Zlib = Zlib;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(Buffer, process) {// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-var Transform = __webpack_require__(23);
-
-var binding = __webpack_require__(31);
-var util = __webpack_require__(27);
-var assert = __webpack_require__(29).ok;
-
-// zlib doesn't provide these, so kludge them in following the same
-// const naming scheme zlib uses.
-binding.Z_MIN_WINDOWBITS = 8;
-binding.Z_MAX_WINDOWBITS = 15;
-binding.Z_DEFAULT_WINDOWBITS = 15;
-
-// fewer than 64 bytes per chunk is stupid.
-// technically it could work with as few as 8, but even 64 bytes
-// is absurdly low.  Usually a MB or more is best.
-binding.Z_MIN_CHUNK = 64;
-binding.Z_MAX_CHUNK = Infinity;
-binding.Z_DEFAULT_CHUNK = (16 * 1024);
-
-binding.Z_MIN_MEMLEVEL = 1;
-binding.Z_MAX_MEMLEVEL = 9;
-binding.Z_DEFAULT_MEMLEVEL = 8;
-
-binding.Z_MIN_LEVEL = -1;
-binding.Z_MAX_LEVEL = 9;
-binding.Z_DEFAULT_LEVEL = binding.Z_DEFAULT_COMPRESSION;
-
-// expose all the zlib constants
-Object.keys(binding).forEach(function(k) {
-  if (k.match(/^Z/)) exports[k] = binding[k];
-});
-
-// translation table for return codes.
-exports.codes = {
-  Z_OK: binding.Z_OK,
-  Z_STREAM_END: binding.Z_STREAM_END,
-  Z_NEED_DICT: binding.Z_NEED_DICT,
-  Z_ERRNO: binding.Z_ERRNO,
-  Z_STREAM_ERROR: binding.Z_STREAM_ERROR,
-  Z_DATA_ERROR: binding.Z_DATA_ERROR,
-  Z_MEM_ERROR: binding.Z_MEM_ERROR,
-  Z_BUF_ERROR: binding.Z_BUF_ERROR,
-  Z_VERSION_ERROR: binding.Z_VERSION_ERROR
-};
-
-Object.keys(exports.codes).forEach(function(k) {
-  exports.codes[exports.codes[k]] = k;
-});
-
-exports.Deflate = Deflate;
-exports.Inflate = Inflate;
-exports.Gzip = Gzip;
-exports.Gunzip = Gunzip;
-exports.DeflateRaw = DeflateRaw;
-exports.InflateRaw = InflateRaw;
-exports.Unzip = Unzip;
-
-exports.createDeflate = function(o) {
-  return new Deflate(o);
-};
-
-exports.createInflate = function(o) {
-  return new Inflate(o);
-};
-
-exports.createDeflateRaw = function(o) {
-  return new DeflateRaw(o);
-};
-
-exports.createInflateRaw = function(o) {
-  return new InflateRaw(o);
-};
-
-exports.createGzip = function(o) {
-  return new Gzip(o);
-};
-
-exports.createGunzip = function(o) {
-  return new Gunzip(o);
-};
-
-exports.createUnzip = function(o) {
-  return new Unzip(o);
-};
-
-
-// Convenience methods.
-// compress/decompress a string or buffer in one step.
-exports.deflate = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new Deflate(opts), buffer, callback);
-};
-
-exports.deflateSync = function(buffer, opts) {
-  return zlibBufferSync(new Deflate(opts), buffer);
-};
-
-exports.gzip = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new Gzip(opts), buffer, callback);
-};
-
-exports.gzipSync = function(buffer, opts) {
-  return zlibBufferSync(new Gzip(opts), buffer);
-};
-
-exports.deflateRaw = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new DeflateRaw(opts), buffer, callback);
-};
-
-exports.deflateRawSync = function(buffer, opts) {
-  return zlibBufferSync(new DeflateRaw(opts), buffer);
-};
-
-exports.unzip = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new Unzip(opts), buffer, callback);
-};
-
-exports.unzipSync = function(buffer, opts) {
-  return zlibBufferSync(new Unzip(opts), buffer);
-};
-
-exports.inflate = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new Inflate(opts), buffer, callback);
-};
-
-exports.inflateSync = function(buffer, opts) {
-  return zlibBufferSync(new Inflate(opts), buffer);
-};
-
-exports.gunzip = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new Gunzip(opts), buffer, callback);
-};
-
-exports.gunzipSync = function(buffer, opts) {
-  return zlibBufferSync(new Gunzip(opts), buffer);
-};
-
-exports.inflateRaw = function(buffer, opts, callback) {
-  if (typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
-  return zlibBuffer(new InflateRaw(opts), buffer, callback);
-};
-
-exports.inflateRawSync = function(buffer, opts) {
-  return zlibBufferSync(new InflateRaw(opts), buffer);
-};
-
-function zlibBuffer(engine, buffer, callback) {
-  var buffers = [];
-  var nread = 0;
-
-  engine.on('error', onError);
-  engine.on('end', onEnd);
-
-  engine.end(buffer);
-  flow();
-
-  function flow() {
-    var chunk;
-    while (null !== (chunk = engine.read())) {
-      buffers.push(chunk);
-      nread += chunk.length;
-    }
-    engine.once('readable', flow);
-  }
-
-  function onError(err) {
-    engine.removeListener('end', onEnd);
-    engine.removeListener('readable', flow);
-    callback(err);
-  }
-
-  function onEnd() {
-    var buf = Buffer.concat(buffers, nread);
-    buffers = [];
-    callback(null, buf);
-    engine.close();
-  }
-}
-
-function zlibBufferSync(engine, buffer) {
-  if (typeof buffer === 'string')
-    buffer = new Buffer(buffer);
-  if (!Buffer.isBuffer(buffer))
-    throw new TypeError('Not a string or buffer');
-
-  var flushFlag = binding.Z_FINISH;
-
-  return engine._processChunk(buffer, flushFlag);
-}
-
-// generic zlib
-// minimal 2-byte header
-function Deflate(opts) {
-  if (!(this instanceof Deflate)) return new Deflate(opts);
-  Zlib.call(this, opts, binding.DEFLATE);
-}
-
-function Inflate(opts) {
-  if (!(this instanceof Inflate)) return new Inflate(opts);
-  Zlib.call(this, opts, binding.INFLATE);
-}
-
-
-
-// gzip - bigger header, same deflate compression
-function Gzip(opts) {
-  if (!(this instanceof Gzip)) return new Gzip(opts);
-  Zlib.call(this, opts, binding.GZIP);
-}
-
-function Gunzip(opts) {
-  if (!(this instanceof Gunzip)) return new Gunzip(opts);
-  Zlib.call(this, opts, binding.GUNZIP);
-}
-
-
-
-// raw - no header
-function DeflateRaw(opts) {
-  if (!(this instanceof DeflateRaw)) return new DeflateRaw(opts);
-  Zlib.call(this, opts, binding.DEFLATERAW);
-}
-
-function InflateRaw(opts) {
-  if (!(this instanceof InflateRaw)) return new InflateRaw(opts);
-  Zlib.call(this, opts, binding.INFLATERAW);
-}
-
-
-// auto-detect header.
-function Unzip(opts) {
-  if (!(this instanceof Unzip)) return new Unzip(opts);
-  Zlib.call(this, opts, binding.UNZIP);
-}
-
-
-// the Zlib class they all inherit from
-// This thing manages the queue of requests, and returns
-// true or false if there is anything in the queue when
-// you call the .write() method.
-
-function Zlib(opts, mode) {
-  this._opts = opts = opts || {};
-  this._chunkSize = opts.chunkSize || exports.Z_DEFAULT_CHUNK;
-
-  Transform.call(this, opts);
-
-  if (opts.flush) {
-    if (opts.flush !== binding.Z_NO_FLUSH &&
-        opts.flush !== binding.Z_PARTIAL_FLUSH &&
-        opts.flush !== binding.Z_SYNC_FLUSH &&
-        opts.flush !== binding.Z_FULL_FLUSH &&
-        opts.flush !== binding.Z_FINISH &&
-        opts.flush !== binding.Z_BLOCK) {
-      throw new Error('Invalid flush flag: ' + opts.flush);
-    }
-  }
-  this._flushFlag = opts.flush || binding.Z_NO_FLUSH;
-
-  if (opts.chunkSize) {
-    if (opts.chunkSize < exports.Z_MIN_CHUNK ||
-        opts.chunkSize > exports.Z_MAX_CHUNK) {
-      throw new Error('Invalid chunk size: ' + opts.chunkSize);
-    }
-  }
-
-  if (opts.windowBits) {
-    if (opts.windowBits < exports.Z_MIN_WINDOWBITS ||
-        opts.windowBits > exports.Z_MAX_WINDOWBITS) {
-      throw new Error('Invalid windowBits: ' + opts.windowBits);
-    }
-  }
-
-  if (opts.level) {
-    if (opts.level < exports.Z_MIN_LEVEL ||
-        opts.level > exports.Z_MAX_LEVEL) {
-      throw new Error('Invalid compression level: ' + opts.level);
-    }
-  }
-
-  if (opts.memLevel) {
-    if (opts.memLevel < exports.Z_MIN_MEMLEVEL ||
-        opts.memLevel > exports.Z_MAX_MEMLEVEL) {
-      throw new Error('Invalid memLevel: ' + opts.memLevel);
-    }
-  }
-
-  if (opts.strategy) {
-    if (opts.strategy != exports.Z_FILTERED &&
-        opts.strategy != exports.Z_HUFFMAN_ONLY &&
-        opts.strategy != exports.Z_RLE &&
-        opts.strategy != exports.Z_FIXED &&
-        opts.strategy != exports.Z_DEFAULT_STRATEGY) {
-      throw new Error('Invalid strategy: ' + opts.strategy);
-    }
-  }
-
-  if (opts.dictionary) {
-    if (!Buffer.isBuffer(opts.dictionary)) {
-      throw new Error('Invalid dictionary: it should be a Buffer instance');
-    }
-  }
-
-  this._binding = new binding.Zlib(mode);
-
-  var self = this;
-  this._hadError = false;
-  this._binding.onerror = function(message, errno) {
-    // there is no way to cleanly recover.
-    // continuing only obscures problems.
-    self._binding = null;
-    self._hadError = true;
-
-    var error = new Error(message);
-    error.errno = errno;
-    error.code = exports.codes[errno];
-    self.emit('error', error);
-  };
-
-  var level = exports.Z_DEFAULT_COMPRESSION;
-  if (typeof opts.level === 'number') level = opts.level;
-
-  var strategy = exports.Z_DEFAULT_STRATEGY;
-  if (typeof opts.strategy === 'number') strategy = opts.strategy;
-
-  this._binding.init(opts.windowBits || exports.Z_DEFAULT_WINDOWBITS,
-                     level,
-                     opts.memLevel || exports.Z_DEFAULT_MEMLEVEL,
-                     strategy,
-                     opts.dictionary);
-
-  this._buffer = new Buffer(this._chunkSize);
-  this._offset = 0;
-  this._closed = false;
-  this._level = level;
-  this._strategy = strategy;
-
-  this.once('end', this.close);
-}
-
-util.inherits(Zlib, Transform);
-
-Zlib.prototype.params = function(level, strategy, callback) {
-  if (level < exports.Z_MIN_LEVEL ||
-      level > exports.Z_MAX_LEVEL) {
-    throw new RangeError('Invalid compression level: ' + level);
-  }
-  if (strategy != exports.Z_FILTERED &&
-      strategy != exports.Z_HUFFMAN_ONLY &&
-      strategy != exports.Z_RLE &&
-      strategy != exports.Z_FIXED &&
-      strategy != exports.Z_DEFAULT_STRATEGY) {
-    throw new TypeError('Invalid strategy: ' + strategy);
-  }
-
-  if (this._level !== level || this._strategy !== strategy) {
-    var self = this;
-    this.flush(binding.Z_SYNC_FLUSH, function() {
-      self._binding.params(level, strategy);
-      if (!self._hadError) {
-        self._level = level;
-        self._strategy = strategy;
-        if (callback) callback();
-      }
-    });
-  } else {
-    process.nextTick(callback);
-  }
-};
-
-Zlib.prototype.reset = function() {
-  return this._binding.reset();
-};
-
-// This is the _flush function called by the transform class,
-// internally, when the last chunk has been written.
-Zlib.prototype._flush = function(callback) {
-  this._transform(new Buffer(0), '', callback);
-};
-
-Zlib.prototype.flush = function(kind, callback) {
-  var ws = this._writableState;
-
-  if (typeof kind === 'function' || (kind === void 0 && !callback)) {
-    callback = kind;
-    kind = binding.Z_FULL_FLUSH;
-  }
-
-  if (ws.ended) {
-    if (callback)
-      process.nextTick(callback);
-  } else if (ws.ending) {
-    if (callback)
-      this.once('end', callback);
-  } else if (ws.needDrain) {
-    var self = this;
-    this.once('drain', function() {
-      self.flush(callback);
-    });
-  } else {
-    this._flushFlag = kind;
-    this.write(new Buffer(0), '', callback);
-  }
-};
-
-Zlib.prototype.close = function(callback) {
-  if (callback)
-    process.nextTick(callback);
-
-  if (this._closed)
-    return;
-
-  this._closed = true;
-
-  this._binding.close();
-
-  var self = this;
-  process.nextTick(function() {
-    self.emit('close');
-  });
-};
-
-Zlib.prototype._transform = function(chunk, encoding, cb) {
-  var flushFlag;
-  var ws = this._writableState;
-  var ending = ws.ending || ws.ended;
-  var last = ending && (!chunk || ws.length === chunk.length);
-
-  if (!chunk === null && !Buffer.isBuffer(chunk))
-    return cb(new Error('invalid input'));
-
-  // If it's the last chunk, or a final flush, we use the Z_FINISH flush flag.
-  // If it's explicitly flushing at some other time, then we use
-  // Z_FULL_FLUSH. Otherwise, use Z_NO_FLUSH for maximum compression
-  // goodness.
-  if (last)
-    flushFlag = binding.Z_FINISH;
-  else {
-    flushFlag = this._flushFlag;
-    // once we've flushed the last of the queue, stop flushing and
-    // go back to the normal behavior.
-    if (chunk.length >= ws.length) {
-      this._flushFlag = this._opts.flush || binding.Z_NO_FLUSH;
-    }
-  }
-
-  var self = this;
-  this._processChunk(chunk, flushFlag, cb);
-};
-
-Zlib.prototype._processChunk = function(chunk, flushFlag, cb) {
-  var availInBefore = chunk && chunk.length;
-  var availOutBefore = this._chunkSize - this._offset;
-  var inOff = 0;
-
-  var self = this;
-
-  var async = typeof cb === 'function';
-
-  if (!async) {
-    var buffers = [];
-    var nread = 0;
-
-    var error;
-    this.on('error', function(er) {
-      error = er;
-    });
-
-    do {
-      var res = this._binding.writeSync(flushFlag,
-                                        chunk, // in
-                                        inOff, // in_off
-                                        availInBefore, // in_len
-                                        this._buffer, // out
-                                        this._offset, //out_off
-                                        availOutBefore); // out_len
-    } while (!this._hadError && callback(res[0], res[1]));
-
-    if (this._hadError) {
-      throw error;
-    }
-
-    var buf = Buffer.concat(buffers, nread);
-    this.close();
-
-    return buf;
-  }
-
-  var req = this._binding.write(flushFlag,
-                                chunk, // in
-                                inOff, // in_off
-                                availInBefore, // in_len
-                                this._buffer, // out
-                                this._offset, //out_off
-                                availOutBefore); // out_len
-
-  req.buffer = chunk;
-  req.callback = callback;
-
-  function callback(availInAfter, availOutAfter) {
-    if (self._hadError)
-      return;
-
-    var have = availOutBefore - availOutAfter;
-    assert(have >= 0, 'have should not go down');
-
-    if (have > 0) {
-      var out = self._buffer.slice(self._offset, self._offset + have);
-      self._offset += have;
-      // serve some output to the consumer.
-      if (async) {
-        self.push(out);
-      } else {
-        buffers.push(out);
-        nread += out.length;
-      }
-    }
-
-    // exhausted the output buffer, or used all the input create a new one.
-    if (availOutAfter === 0 || self._offset >= self._chunkSize) {
-      availOutBefore = self._chunkSize;
-      self._offset = 0;
-      self._buffer = new Buffer(self._chunkSize);
-    }
-
-    if (availOutAfter === 0) {
-      // Not actually done.  Need to reprocess.
-      // Also, update the availInBefore to the availInAfter value,
-      // so that if we have to hit it a third (fourth, etc.) time,
-      // it'll have the correct byte counts.
-      inOff += (availInBefore - availInAfter);
-      availInBefore = availInAfter;
-
-      if (!async)
-        return true;
-
-      var newReq = self._binding.write(flushFlag,
-                                       chunk,
-                                       inOff,
-                                       availInBefore,
-                                       self._buffer,
-                                       self._offset,
-                                       self._chunkSize);
-      newReq.callback = callback; // this same function
-      newReq.buffer = chunk;
-      return;
-    }
-
-    if (!async)
-      return false;
-
-    // finished with the chunk.
-    cb();
-  }
-};
-
-util.inherits(Deflate, Zlib);
-util.inherits(Inflate, Zlib);
-util.inherits(Gzip, Zlib);
-util.inherits(Gunzip, Zlib);
-util.inherits(DeflateRaw, Zlib);
-util.inherits(InflateRaw, Zlib);
-util.inherits(Unzip, Zlib);
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer, __webpack_require__(2)))
-
-/***/ }),
 /* 33 */
 /***/ (function(module, exports) {
 
@@ -8520,7 +8562,7 @@ module.exports = {
 /* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var http = __webpack_require__(24);
+var http = __webpack_require__(25);
 
 var https = module.exports;
 
@@ -8692,9 +8734,9 @@ module.exports = {
 
 var utils   = __webpack_require__(7);
 var trees   = __webpack_require__(41);
-var adler32 = __webpack_require__(18);
-var crc32   = __webpack_require__(19);
-var msg     = __webpack_require__(20);
+var adler32 = __webpack_require__(19);
+var crc32   = __webpack_require__(20);
+var msg     = __webpack_require__(21);
 
 /* Public constants ==========================================================*/
 /* ===========================================================================*/
@@ -10887,8 +10929,8 @@ module.exports = function inflate_fast(strm, start) {
 
 
 var utils         = __webpack_require__(7);
-var adler32       = __webpack_require__(18);
-var crc32         = __webpack_require__(19);
+var adler32       = __webpack_require__(19);
+var crc32         = __webpack_require__(20);
 var inflate_fast  = __webpack_require__(38);
 var inflate_table = __webpack_require__(40);
 
@@ -14740,7 +14782,7 @@ module.exports = __webpack_require__(4)
 
 var Buffer = __webpack_require__(0).Buffer;
 /*<replacement>*/
-var bufferShim = __webpack_require__(8);
+var bufferShim = __webpack_require__(9);
 /*</replacement>*/
 
 module.exports = BufferList;
@@ -14805,14 +14847,14 @@ BufferList.prototype.concat = function (n) {
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(21)
+module.exports = __webpack_require__(22)
 
 
 /***/ }),
 /* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(12)
+module.exports = __webpack_require__(13)
 
 
 /***/ }),
@@ -15012,10 +15054,10 @@ module.exports = __webpack_require__(12)
 /* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(25)
+/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(26)
 var inherits = __webpack_require__(3)
 var response = __webpack_require__(52)
-var stream = __webpack_require__(13)
+var stream = __webpack_require__(14)
 var toArrayBuffer = __webpack_require__(54)
 
 var IncomingMessage = response.IncomingMessage
@@ -15313,9 +15355,9 @@ var unsafeHeaders = [
 /* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(25)
+/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(26)
 var inherits = __webpack_require__(3)
-var stream = __webpack_require__(13)
+var stream = __webpack_require__(14)
 
 var rStates = exports.readyStates = {
 	UNSENT: 0,
@@ -15793,7 +15835,7 @@ function extend() {
 "use strict";
 
 
-var HttpRequest = __webpack_require__(28);
+var HttpRequest = __webpack_require__(29);
 var HttpResponse = __webpack_require__(16);
 
 module.exports = {};
