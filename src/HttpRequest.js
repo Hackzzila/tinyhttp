@@ -189,7 +189,7 @@ class HttpRequest extends stream.Readable {
 
       const req = module.request(Object.assign({}, u, {
         method: this.method,
-        headers: Object.assign(this.headers, this._form.getHeaders()),
+        headers: Object.assign(this.headers, this._form ? this._form.getHeaders() : {}),
       }), (res) => {
         if ([301, 302, 307, 308].includes(res.statusCode)
         && res.headers.location && redirects < 5) {
