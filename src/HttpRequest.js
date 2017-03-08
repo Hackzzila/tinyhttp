@@ -3,6 +3,7 @@ const zlib = require('zlib');
 const http = require('http');
 const https = require('https');
 const stream = require('stream');
+const MimeUtils = require('./MimeUtils');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
 
@@ -141,13 +142,15 @@ class HttpRequest extends stream.Readable {
    * @param {Buffer|String|Stream} content The file content
    * @param {?String} filename The file name.
    * This is not neaded for content from `fs.ReadStream`
-   * @param {?String} contentType The content type.
-   * This is not neaded for content from `fs.ReadStream`
+   * @param {?String} contentType The content type. This is not required, but will override
+   * the default content type pulled from the file's extension.
    * @returns {HttpRequest}
    */
   attach(name, content, filename, contentType) {
     if (!FormData) throw new Error('\'form-data\' is not installed');
     if (!this._form) this._form = new FormData();
+
+    if (filename && !contentType) contentType = MimeUtils.contentType(filename);
 
     this._form.append(name, content, { filename, contentType });
 

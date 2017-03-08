@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>index.js - Documentation</title>
+    <title>MimeUtils.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -27,7 +27,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">index.js</h1>
+    <h1 class="page-title">MimeUtils.js</h1>
     
 
     
@@ -37,76 +37,96 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>const MimeUtils = require('./MimeUtils');
-const HttpRequest = require('./HttpRequest');
-const HttpResponse = require('./HttpResponse');
+            <pre class="prettyprint source linenums"><code>const db = require('../types.json');
+const path = require('path');
 
-module.exports = {};
-
-/**
- * Makes a new request
- * @function request
- * @param {String} method The method
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.request = (method, url) => new HttpRequest(method, url);
+let def = null;
 
 /**
- * Makes a GET request
- * @function get
- * @param {String} url The url
- * @returns {HttpRequest}
+ * Mime utilities. Accessible from {@link mime}
  */
-module.exports.get = url => new HttpRequest('GET', url);
+class MimeUtils {
+  /**
+   * The default value or mime type returned when no results are found. Can be set by the user.
+   * Defaults to `null`
+   * @type {?*}
+   */
+  static get default() {
+    return def;
+  }
 
-/**
- * Makes a POST request
- * @function post
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.post = url => new HttpRequest('POST', url);
+  static set default(val) {
+    return def = val; // eslint-disable-line no-return-assign
+  }
 
-/**
- * Makes a PUT request
- * @function put
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.put = url => new HttpRequest('PUT', url);
+  /**
+   * Returns a mime type for an extension or file
+   * @param {String} file An extension or file
+   * @returns {?String} The mime type or the default value
+   */
+  static lookup(file) {
+    if (!path) return def;
 
-/**
- * Makes a PATCH request
- * @function patch
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.patch = url => new HttpRequest('PATCH', url);
+    let ext = path.parse(file).ext;
+    if (!ext) ext = file.replace('.', '');
 
-/**
- * Makes a DELETE request
- * @function del
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.del = url => new HttpRequest('DELETE', url);
+    const type = db.extensions[ext];
+    if (!type) return def;
+    return type;
+  }
 
-/**
- * Makes a DELETE request
- * @function delete
- * @param {String} url The url
- * @returns {HttpRequest}
- */
-module.exports.delete = url => new HttpRequest('DELETE', url);
+  /**
+   * Returns a `Content-Type` string for a mime type or extension
+   * @param {String} typeOrFile A mime type or file/extension
+   * @returns {?String} The Content-Type` string or the default value
+   */
+  static contentType(file) {
+    let typeName = file;
+    let type = db.types[file];
+    if (!type) {
+      typeName = this.lookup(file);
+      type = db.types[typeName];
+    }
 
-/**
- * {@link MimeUtils Mime utilities}
- */
-module.exports.mime = MimeUtils;
+    if (!type) {
+      typeName = def;
+      type = db.types[def];
+    }
 
-module.exports.HttpRequest = HttpRequest;
-module.exports.HttpResponse = HttpResponse;
+    if (!type) return def;
+    return `${typeName}${type.charset ? `; charset=${type.charset}` : ''}`;
+  }
+
+  /**
+   * Returns the default extension for a mime type
+   * @param {String} type A mime type
+   * @returns {?String} The extension, the default value, or undefined for no extension
+   */
+  static extension(typeName) {
+    let type = db.types[typeName];
+    if (!type) type = db.types[def];
+
+    if (!type) return def;
+
+    return type.extensions ? type.extensions[0] : undefined;
+  }
+
+  /**
+   * Returns the default charset for a mime type
+   * @param {String} type A mime type
+   * @returns {?String} The charset, the default value, or undefined for no charset
+   */
+  static charset(typeName) {
+    let type = db.types[typeName];
+    if (!type) type = db.types[def];
+
+    if (!type) return def;
+
+    return type.charset;
+  }
+}
+
+module.exports = MimeUtils;
 </code></pre>
         </article>
     </section>

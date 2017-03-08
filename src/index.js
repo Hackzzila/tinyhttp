@@ -1,3 +1,4 @@
+const MimeUtils = require('./MimeUtils');
 const HttpRequest = require('./HttpRequest');
 const HttpResponse = require('./HttpResponse');
 
@@ -59,6 +60,11 @@ module.exports.del = url => new HttpRequest('DELETE', url);
  * @returns {HttpRequest}
  */
 module.exports.delete = url => new HttpRequest('DELETE', url);
+
+/**
+ * {@link MimeUtils Mime utilities}
+ */
+module.exports.mime = MimeUtils;
 
 module.exports.HttpRequest = HttpRequest;
 module.exports.HttpResponse = HttpResponse;
