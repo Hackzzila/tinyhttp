@@ -1,11 +1,15 @@
 const url = require('url');
-const zlib = require('zlib');
 const http = require('http');
 const https = require('https');
 const stream = require('stream');
 const MimeUtils = require('./MimeUtils');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
+
+let zlib;
+try {
+  zlib = require('zlib'); // eslint-disable-line global-require
+} catch (err) { } // eslint-disable-line no-empty
 
 let FormData;
 try {
@@ -42,7 +46,7 @@ class HttpRequest extends stream.Readable {
      * The headers to be sent, can be manipulated easily with {@link HttpRequest#set}
      * @type {Object}
      */
-    this.headers = { 'User-Agent': 'node-tinyhttp', 'Accept-Encoding': 'gzip, deflate' };
+    this.headers = { 'User-Agent': 'node-tinyhttp', 'Accept-Encoding': zlib ? 'gzip, deflate' : '' };
 
     /**
      * The request body, can be manipulated easily with {@link HttpRequest#send}
@@ -80,10 +84,12 @@ class HttpRequest extends stream.Readable {
       this.request(this.url, 0, true)
         .then((res) => {
           let str;
-          if (res.headers['content-encoding'] === 'gzip') {
+          if (zlib && res.headers['content-encoding'] === 'gzip') {
             str = res.pipe(zlib.createGunzip());
-          } else if (res.headers['content-encoding'] === 'deflate') {
+          } else if (zlib && res.headers['content-encoding'] === 'deflate') {
             str = res.pipe(zlib.createInflate());
+          } else if (res.headers['content-encoding'] === 'gzip' || res.headers['content-encoding'] === 'deflate') {
+            throw new Error('\'zlib\' not foind');
           } else str = res;
 
           str.on('data', chunk => this.push(chunk));
