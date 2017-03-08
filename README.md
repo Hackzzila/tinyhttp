@@ -1,5 +1,7 @@
 # tinyhttp
-A small http module with no dependencies 🎉
+A small http module with almost no dependencies 🎉
+
+For `multipart/form-data` support, the `form-data` package is required.
 
 [Docs](https://hackzzila.github.io/tinyhttp/)  
 Browser builds are available [here](web)

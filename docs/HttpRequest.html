@@ -69,7 +69,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line14">line 14</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -251,7 +251,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line46">line 46</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line52">line 52</a>
     </li></ul></dd>
     
 
@@ -291,7 +291,9 @@
 
 
 <div class="description">
-    <p>The request body, can be manipulated easily with <a href="HttpRequest.html#send">HttpRequest#send</a></p>
+    <p>The request body, can be manipulated easily with <a href="HttpRequest.html#send">HttpRequest#send</a>
+or <a href="HttpRequest.html#field">HttpRequest#field</a> and <a href="HttpRequest.html#attach">HttpRequest#attach</a>.
+Do not depend on this value before the request is sent</p>
 </div>
 
 
@@ -327,7 +329,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line52">line 52</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line58">line 58</a>
     </li></ul></dd>
     
 
@@ -400,7 +402,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line40">line 40</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line44">line 44</a>
     </li></ul></dd>
     
 
@@ -473,7 +475,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line34">line 34</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -546,7 +548,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line61">line 61</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line67">line 67</a>
     </li></ul></dd>
     
 
@@ -617,7 +619,7 @@
 
     
 
-    <h4 class="name" id="attach"><span class="type-signature"></span>attach<span class="signature">(name, content, filename, contentType<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {<a href="HttpRequest.html">HttpRequest</a>}</span></h4>
+    <h4 class="name" id="attach"><span class="type-signature"></span>attach<span class="signature">(name, content, filename<span class="signature-attributes">nullable</span>, contentType<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {<a href="HttpRequest.html">HttpRequest</a>}</span></h4>
 
     
 
@@ -750,6 +752,9 @@
 |
 
 <span class="param-type">String</span>
+|
+
+<span class="param-type">Stream</span>
 
 
             
@@ -791,6 +796,8 @@
                 
 
                 
+                    &lt;nullable><br>
+                
 
                 
                 </td>
@@ -798,7 +805,8 @@
 
             
 
-            <td class="description last"><p>The file name</p></td>
+            <td class="description last"><p>The file name.
+This is not neaded for content from <code>fs.ReadStream</code></p></td>
         </tr>
 
     
@@ -831,7 +839,8 @@
 
             
 
-            <td class="description last"><p>The content type</p></td>
+            <td class="description last"><p>The content type.
+This is not neaded for content from <code>fs.ReadStream</code></p></td>
         </tr>
 
     
@@ -888,7 +897,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line270">line 270</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line261">line 261</a>
     </li></ul></dd>
     
 
@@ -1039,7 +1048,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line228">line 228</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line219">line 219</a>
     </li></ul></dd>
     
 
@@ -1172,7 +1181,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line123">line 123</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line129">line 129</a>
     </li></ul></dd>
     
 
@@ -1279,10 +1288,13 @@
             <td class="type">
             
                 
-<span class="param-type">Cuffer</span>
+<span class="param-type">Buffer</span>
 |
 
 <span class="param-type">String</span>
+|
+
+<span class="param-type">Stream</span>
 
 
             
@@ -1349,7 +1361,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line94">line 94</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line100">line 100</a>
     </li></ul></dd>
     
 
@@ -1546,7 +1558,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line173">line 173</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line165">line 165</a>
     </li></ul></dd>
     
 
@@ -1748,7 +1760,7 @@ it will automatically be set to <code>application/json</code>, however, if it is
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line107">line 107</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line113">line 113</a>
     </li></ul></dd>
     
 
@@ -1945,7 +1957,7 @@ it will automatically be set to <code>application/json</code>, however, if it is
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line251">line 251</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line242">line 242</a>
     </li></ul></dd>
     
 
@@ -2127,7 +2139,7 @@ it will automatically be set to <code>application/json</code>, however, if it is
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line15">line 15</a>
+        <a href="HttpRequest.js.html">HttpRequest.js</a>, <a href="HttpRequest.js.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -2257,7 +2269,7 @@ it will automatically be set to <code>application/json</code>, however, if it is
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Mon Mar 06 2017 16:20:06 GMT-0600 (STD) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Mar 07 2017 22:24:31 GMT-0600 (STD) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

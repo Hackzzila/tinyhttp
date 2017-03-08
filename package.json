@@ -1,7 +1,7 @@
 {
   "name": "tinyhttp",
   "version": "0.1.0",
-  "description": "A small http module with no dependencies 🎉",
+  "description": "A small http module with almost no dependencies 🎉",
   "main": "lib/index.js",
   "scripts": {
     "docs": "jsdoc --readme README.md -c jsdoc.json",
@@ -35,5 +35,8 @@
     "eslint-plugin-import": "^2.2.0",
     "jsdoc": "^3.4.3",
     "webpack": "^2.2.1"
+  },
+  "optionalDependencies": {
+    "form-data": "^2.1.2"
   }
 }
