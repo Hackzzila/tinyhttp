@@ -1,19 +1,14 @@
 const url = require('url');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 const stream = require('stream');
-const MimeUtils = require('./MimeUtils');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
 
 let zlib;
 try {
   zlib = require('zlib'); // eslint-disable-line global-require
-} catch (err) { } // eslint-disable-line no-empty
-
-let FormData;
-try {
-  FormData = require('form-data'); // eslint-disable-line global-require, import/no-extraneous-dependencies
 } catch (err) { } // eslint-disable-line no-empty
 
 /**
@@ -134,10 +129,17 @@ class HttpRequest extends stream.Readable {
    * @returns {HttpRequest}
    */
   field(name, content) {
-    if (!FormData) throw new Error('\'form-data\' is not installed');
-    if (!this._form) this._form = new FormData();
+    if (!this._multipart) {
+      this._multipart = true;
+      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
+      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
+      this.body = '';
+    }
 
-    this._form.append(name, content);
+    this.body += `
+--${this._boundary}
+Content-Disposition: form-data; name="${name}"
+${content}`;
 
     return this;
   }
@@ -153,12 +155,19 @@ class HttpRequest extends stream.Readable {
    * @returns {HttpRequest}
    */
   attach(name, content, filename, contentType) {
-    if (!FormData) throw new Error('\'form-data\' is not installed');
-    if (!this._form) this._form = new FormData();
+    if (!this._multipart) {
+      this._multipart = true;
+      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
+      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
+      this.body = '';
+    }
 
-    if (filename && !contentType) contentType = MimeUtils.contentType(filename);
-
-    this._form.append(name, content, { filename, contentType });
+    this.body += `
+--${this._boundary}
+Content-Disposition: form-data; name="${name}"; filename="${filename}"
+${contentType ? `Content-Type: ${contentType}\n` : ''}
+Content-Type: application/octet-stream\n
+${content}`;
 
     return this;
   }
@@ -189,6 +198,8 @@ class HttpRequest extends stream.Readable {
 
   request(u, redirects, isStream) {
     return new Promise((resolve) => {
+      if (this._multipart) this.body = this.body.concat(`\n--${this._boundary}--`).trim();
+
       let module;
       if (u.protocol === 'http:') {
         module = http;
@@ -210,8 +221,7 @@ class HttpRequest extends stream.Readable {
         }
       });
 
-      if (this._form) this._form.pipe(req);
-      else req.end(this.body, this.encoding);
+      req.end(this.body, this.encoding);
     });
   }
 
