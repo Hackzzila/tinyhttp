@@ -154,7 +154,7 @@ ${content}`;
    * the default content type pulled from the file's extension.
    * @returns {HttpRequest}
    */
-  attach(name, content, filename, contentType) {
+  attach(name, content, filename) {
     if (!this._multipart) {
       this._multipart = true;
       this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
@@ -165,8 +165,8 @@ ${content}`;
     this.body += `
 --${this._boundary}
 Content-Disposition: form-data; name="${name}"; filename="${filename}"
-${contentType ? `Content-Type: ${contentType}\n` : ''}
-Content-Type: application/octet-stream\n
+Content-Type: application/octet-stream
+
 ${content}`;
 
     return this;
