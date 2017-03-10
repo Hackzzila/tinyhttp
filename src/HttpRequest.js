@@ -1,8 +1,8 @@
 const url = require('url');
 const http = require('http');
 const https = require('https');
-const crypto = require('crypto');
 const stream = require('stream');
+const FormData = require('./FormData');
 const querystring = require('querystring');
 const HttpResponse = require('./HttpResponse');
 
@@ -129,18 +129,9 @@ class HttpRequest extends stream.Readable {
    * @returns {HttpRequest}
    */
   field(name, content) {
-    if (!this._multipart) {
-      this._multipart = true;
-      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
-      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
-      this.body = '';
-    }
+    if (!this._form) this._form = new FormData();
 
-    this.body += `
---${this._boundary}
-Content-Disposition: form-data; name="${name}"
-
-${content}`;
+    this._form.append(name, content);
 
     return this;
   }
@@ -151,24 +142,12 @@ ${content}`;
    * @param {Buffer|String|Stream} content The file content
    * @param {?String} filename The file name.
    * This is not neaded for content from `fs.ReadStream`
-   * @param {?String} contentType The content type. This is not required, but will override
-   * the default content type pulled from the file's extension.
    * @returns {HttpRequest}
    */
   attach(name, content, filename) {
-    if (!this._multipart) {
-      this._multipart = true;
-      this._boundary = `----------------------${crypto.randomBytes(32).toString('hex')}`;
-      this.set('Content-Type', `multipart/form-data; boundary=${this._boundary}`);
-      this.body = '';
-    }
+    if (!this._form) this._form = new FormData();
 
-    this.body += `
---${this._boundary}
-Content-Disposition: form-data; name="${name}"; filename="${filename}"
-Content-Type: application/octet-stream
-
-${content}`;
+    this._form.append(name, content, filename);
 
     return this;
   }
@@ -199,7 +178,7 @@ ${content}`;
 
   request(u, redirects, isStream) {
     return new Promise((resolve) => {
-      if (this._multipart) this.body = this.body.concat(`\n--${this._boundary}--`).trim();
+      if (this._form) this.body = this._form.end();
 
       let module;
       if (u.protocol === 'http:') {

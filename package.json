@@ -36,8 +36,5 @@
     "jsdoc": "^3.4.3",
     "mime-db": "^1.26.0",
     "webpack": "^2.2.1"
-  },
-  "optionalDependencies": {
-    "form-data": "^2.1.2"
   }
 }
