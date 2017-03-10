@@ -18,7 +18,7 @@ class FormData {
 
   append(name, data, filename) {
     let buffer = data;
-    let headers = `\n--${this.boundary}\nContent-Disposition: form-data; name="${name}"}`;
+    let headers = `\n--${this.boundary}\nContent-Disposition: form-data; name="${name}"`;
 
     if (filename) headers += `; filename="${filename}"`;
     else if (fsReadStream && data instanceof fsReadStream) headers += `; filename="${data.path}"`;
