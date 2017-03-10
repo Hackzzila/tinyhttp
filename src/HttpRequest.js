@@ -139,6 +139,7 @@ class HttpRequest extends stream.Readable {
     this.body += `
 --${this._boundary}
 Content-Disposition: form-data; name="${name}"
+
 ${content}`;
 
     return this;
